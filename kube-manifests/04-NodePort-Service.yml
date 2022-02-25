@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-app-nodeport-service
+  labels:
+    app: ms-restapp
+  annotations:
+#Important Note:  Need to add health check path annotations in service level if we are planning to use multiple targets in a load balancer  
+    alb.ingress.kubernetes.io/healthcheck-path: /ms/health-status    
+spec:
+  type: NodePort
+  selector:
+    app: ms-restapp
+  ports:
+    - port: 8095
+      targetPort: 8095
+
+
