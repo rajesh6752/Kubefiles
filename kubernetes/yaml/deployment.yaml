@@ -1,0 +1,80 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: gateway-uat-cs-deployment
+  name: gateway-uat-cs-deployment
+  namespace: default
+  selfLink: /apis/extensions/v1beta1/namespaces/default/deployments/deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: gateway-uat-cs-deployment
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: gateway-uat-cs-deployment
+    spec:
+      containers:
+      - image: <image_name>
+        imagePullPolicy: Always
+        name: gateway-uat-cs-deployment
+        livenessProbe:
+          httpGet:
+            path: /cs/saml/metadata
+            port: 8080
+          initialDelaySeconds: 360
+          timeoutSeconds: 60
+          periodSeconds: 60
+        env:
+        - name: JAVA_OPTS
+          value: "-Xms512m -Xmx1524m -XX:MaxPermSize=512m"
+        ports:
+        - containerPort: 8080
+        - containerPort: 9000
+        volumeMounts:
+        - name: config-volume
+          mountPath: /usr/share/tomcat7/conf/context.xml
+          subPath: context.xml
+        - name: config-volume
+          mountPath: /usr/share/tomcat7/conf/server.xml
+          subPath: server.xml
+          
+        - mountPath: /usr/share/tomcat7/logs
+          name: logs-volume
+        - mountPath: /opt/webastra
+          name: webastra-home-volume
+        - name: resolver
+          mountPath: /etc/resolv.conf
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: config-volume
+        configMap:
+          name: gateway-uat-cs-config
+      - name: logs-volume
+        hostPath:
+          path: /var/logs/svr01-uat/cs/logs
+      - name: resolver
+        hostPath:
+          path: /etc/resolv.conf          
+      - name: webastra-home-volume
+        hostPath:
+          path: /opt/webastra/svr01-uat/webastra
+      nodeSelector:
+        cs: Gateway_UAT-cs

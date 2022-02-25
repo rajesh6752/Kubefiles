@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: gateway-uat-cs-service
+spec:
+  selector:
+    run: gateway-uat-cs-deployment
+  type: NodePort
+  ports:
+  - protocol: TCP
+    nodePort: 30005
+    port: 8050
+    targetPort: 8080
